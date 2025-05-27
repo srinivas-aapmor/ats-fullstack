@@ -1,5 +1,6 @@
 import Upload from "../pages/Upload";
 import ResumeAnaylze from "../pages/ResumeAnaylze";
+import LandingPage from "../pages/LandingPage";
 
 const routes = [
   {
@@ -9,6 +10,10 @@ const routes = [
   {
     path: "/resume-analyze",
     element: <ResumeAnaylze />,
+  },
+  {
+    path: "/",
+    element: <LandingPage />,
   },
 ];
 
