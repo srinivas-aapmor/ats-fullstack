@@ -158,7 +158,11 @@ export default function Upload() {
                                         type="file"
                                         onChange={handleFileChange}
                                         // startIcon={<CloudUploadIcon />}
-                                        sx={{ backgroundColor: '#dbdbdb', color: 'black', height: '30px', minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px', lineHeight: 1, textTransform: "none" }}
+                                        sx={{
+                                            backgroundColor: '#dbdbdb', color: 'black', height: '30px',
+                                            minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px',
+                                            lineHeight: 1, textTransform: "none", boxShadow: 'none'
+                                        }}
                                     >
                                         Choose File
                                         <VisuallyHiddenInput type="file" accept=".pdf,.doc,.docx" multiple />
@@ -175,7 +179,7 @@ export default function Upload() {
                                     </Box>
                                 )}
                             </Box>
-                            <Box> <Button sx={{ float: "right", mt: 1, backgroundColor: "#00C28E", textTransform: "none" }}
+                            <Box> <Button sx={{ float: "right", mt: 1, backgroundColor: "#00C28E", textTransform: "none", boxShadow: 'none' }}
                                 onClick={handleAnalyze}
 
                                 disabled={!selectedFile || !description.trim()}

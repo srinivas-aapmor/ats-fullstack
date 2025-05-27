@@ -7,7 +7,8 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import IconButton from '@mui/material/IconButton';
 import data from '../data.json'
 import ScoreCard from '../helpers/ScoreCard';
-
+import AnalysisCard from '../helpers/AnalaysisCard';
+import grid from '../assets/grid.svg'
 
 
 export default function ResumeAnaylze() {
@@ -16,11 +17,41 @@ export default function ResumeAnaylze() {
     const experience_match = data.ats_analysis.experience_match_percentage || 0;
     const name = data.ats_analysis?.candidate_name || "Candidate Name";
     const experience = data.ats_analysis?.total_experience_years || "0 years";
-    // const current_role=data.ats_analysis?.current_role || "Not Specified";
+    const current_role = data.ats_analysis?.current_role || "Not Specified";
     const higest_education = data.ats_analysis?.highest_education || "Not Specified";
     const email = data.ats_analysis?.Email || "Not Specified";
     const phone = data.ats_analysis?.Phone || "Not Specified";
-    const matching_skills = data.ats_analysis?.matched_skills || [];
+
+    const candidateDetails = [
+        `Name: ${name}`,
+        `Experience: ${experience} years`,
+        `Current role: ${current_role}`,
+        `Highest education: ${higest_education}`,
+        `Email: ${email}`,
+        `Phone: ${phone}`,
+    ];
+
+
+    // const matching_skills = data.ats_analysis?.matched_skills || [];
+    const skills = data.ats_analysis?.matched_skills.join(", ") || "No skills matched";
+    const experience_data = data.ats_analysis?.experience?.map((exp, index) => exp.position);
+
+    const experienceDetails = [
+        "Previous Roles",
+        ...experience_data.map((position) => {
+            return `${position}`
+        }),
+        `Experience Match:${experience_match}%`
+    ]
+
+    const skillsMatch = [
+        "Matched Skills",
+        skills,
+        `Skills Match: ${skills_match}%`
+    ]
+
+
+
 
 
 
@@ -46,17 +77,20 @@ export default function ResumeAnaylze() {
                             </Box>
                         </Box>
                         <Box className='analysis-header-right'>
-                            <Button variant='contained' sx={{ textTransform: "none", backgroundColor: '#9a65fe' }} className='export-button'>Export</Button>
+                            <Button variant='contained' sx={{ textTransform: "none", backgroundColor: '#9a65fe', boxShadow: 'none' }} className='export-button'>Export</Button>
                         </Box>
 
                     </Box>
 
                     <Box>
+                        <Typography gutterBottom className='analysis-subheading' sx={{ fontSize: "20px", fontWeight: "600", color: "#333", marginLeft: "30px" }}>
+                            Match Score
+                        </Typography>
                         <Grid container spacing={4} className='score-cards'>
-                            <Grid size={{ xs: 12, md: 4 }}>
+                            <Grid size={{ xs: 12, md: 4 }} className='grid-item'>
                                 <ScoreCard title="Overall Match" score={overall_match} />
                             </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
+                            <Grid size={{ xs: 12, md: 4 }} className='grid-item'>
                                 <ScoreCard title="Skills Match" score={skills_match} />
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
@@ -66,21 +100,28 @@ export default function ResumeAnaylze() {
                     </Box>
 
                     <Box>
-                        <Grid container spacing={4} className='analysis-cards'>
-                            <Grid size={{ xs: 12, md: 4 }}>
-
+                        <Grid container spacing={4} className='analysis-cards' >
+                            <Grid size={{ xs: 12, md: 4 }} className='grid-item'>
+                                <AnalysisCard title="Candidate Details" details={candidateDetails} />
                             </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-
+                            <Grid size={{ xs: 12, md: 4 }} className='grid-item'>
+                                <AnalysisCard title="Skills Match" details={skillsMatch} />
                             </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-
+                            <Grid size={{ xs: 12, md: 4 }} className='grid-item'>
+                                <AnalysisCard title="Experience Match" details={experienceDetails} />
                             </Grid>
+
                         </Grid>
                     </Box>
 
 
                 </Box>
+                <div className='grids left-grid'>
+                    <img src={grid} alt="grid" />
+                </div>
+                <div className='grids right-grid'>
+                    <img src={grid} alt="grid" />
+                </div>
             </Box>
         </div >
     )
