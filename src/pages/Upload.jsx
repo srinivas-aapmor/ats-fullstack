@@ -148,7 +148,7 @@ export default function Upload() {
                                     Upload Your Resume
                                 </Typography>
                                 <Typography sx={{ color: 'grey' }} variant="h7">
-                                    {' Support Format be .PDF,DOC Only'}
+                                    {' Support Format be .PDF,DOC Only(Less than 2 MB)'}
                                 </Typography>
                                 {!fileName && (
                                     <Button
