@@ -1,0 +1,60 @@
+.analysis-main {
+  background: radial-gradient(
+    210.08% 135.02% at 108.75% 6.07%,
+    #f8fafc 0%,
+    #d4fff3 26.96%,
+    #cddbff 51.12%,
+    #d3fff3 71.15%,
+    #fafbfd 100%
+  );
+  min-height: 100vh;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  margin: 0px 6%;
+}
+
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2% 0;
+  /* margin-right: 40px; */
+}
+
+.analysis-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.good-fit-icon {
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  padding-right: 1px;
+  font-size: 2px;
+}
+
+.analysis-heading {
+  /* font-size: 1.5rem;
+  font-weight: 600; */
+  color: #333;
+  padding: 5px 40px;
+  padding-left: 5px;
+
+  /* margin-right: 36px; */
+}
+
+.score-card {
+  background-color: #ffffff;
+  padding: 4%;
+  border-radius: 8px;
+}
+
+.score {
+  color: #00c28e;
+  /* border-radius: 35px; */
+}
