@@ -1,6 +1,7 @@
 import Upload from "../pages/Upload";
 import ResumeAnaylze from "../pages/ResumeAnaylze";
 import LandingPage from "../pages/LandingPage";
+import ResumesList from "../pages/ResumesList";
 
 const routes = [
   {
@@ -14,6 +15,10 @@ const routes = [
   {
     path: "/",
     element: <LandingPage />,
+  },
+  {
+    path: "/resumes-list",
+    element: <ResumesList />,
   },
 ];
 

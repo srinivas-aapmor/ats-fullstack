@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Paper, Typography, Button, TextField, Grid } from '@mui/material'
 import Navbar from '../components/Navbar'
 import '../styles/upload.css'
@@ -13,15 +13,42 @@ import { useNavigate } from 'react-router-dom'
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios'
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import validateJobDescription from '../utils/validateJD'
+import CloseIcon from '@mui/icons-material/Close';
+
+
 
 export default function Upload() {
+    const navigate = useNavigate();
     const [description, setDescription] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [fileName, setFileName] = useState(null);
-    const navigate = useNavigate();
-
     const formData = new FormData();
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+    const [helperText, setHelperText] = useState('');
+    const [touched, setTouched] = useState(false);
 
+    const Alert = React.forwardRef(function Alert(props, ref) {
+        return <MuiAlert elevation={6} ref={ref} variant='filled' {...props} />;
+    })
+
+
+    const showSnackbar = (message, severity = 'error') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    }
+
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    }
     // console.log(data.ats_analysis.missing_skills);
 
     const handleRemoveFiles = () => {
@@ -30,6 +57,7 @@ export default function Upload() {
     };
 
     const handleFileChange = (event) => {
+
         const files = event.target.files;
         const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         // alert("Resume Uploaded");
@@ -49,21 +77,42 @@ export default function Upload() {
 
     };
 
-    // console.log('Valid files:', selectedFile);
+
 
     const handleAnalyze = async () => {
-        // console.log("Analyzing file:", selectedFile);
+        // const error = validateJobDescription(description);
+        // if (error) {
+        //     showSnackbar(error);
+        //     return;
+        // }
+
         formData.append('resume', selectedFile);
         formData.append('job_description', description)
-        const response = await axios.post('http://192.168.1.27:8502/analyze_resume', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-        console.log(response);
+        try {
+            const response = await axios.post('http://192.168.1.50:8502/analyze_resume', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log(response);
+            showSnackbar("Resume analyzed successfully!", 'success')
+            // navigate("/analyze", { state: { response: response.data } });
+        } catch (error) {
+            console.error("Error analyzing resume:", error)
+            showSnackbar("Failed to analyze resume. Please try again.");
 
-        // navigate("/analyze", { state: { response: response.data } });
-    };
+
+        };
+    }
+
+    useEffect(() => {
+        const error = validateJobDescription(description);
+        if (error) {
+            setHelperText(error);
+        } else {
+            setHelperText('');
+        }
+    }, [description])
 
 
     const VisuallyHiddenInput = styled('input')({
@@ -88,10 +137,10 @@ export default function Upload() {
                 <Navbar />
                 <Box className='upload-container'>
                     <Typography gutterBottom variant="h6" className='welcome-user' sx={{ color: '#8638e6', fontWeight: "bold", fontSize: "24px", mb: "2%", mt: "2%" }}>
-                        Welcome Jyothi,
+                        Welcome Sai Teja,
                     </Typography>
                     <Grid container spacing={5} className="upload-inputs">
-                        <Grid size={6} className='upload-description inputs'>
+                        <Grid size={{ xs: 12, md: 6 }} className='upload-description inputs'>
                             <Box className='jd-box'>
                                 <ContentPasteIcon className='icons' sx={{ fontSize: 35, mr: 1, }} />
                                 <Typography sx={{ fontSize: "20px", fontWeight: "bold" }} className='jd-heading'>Add Your Job Description</Typography>
@@ -109,12 +158,23 @@ export default function Upload() {
                                     // Height="120px"
                                     fullWidth
                                     value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    sx={{ backgroundColor: "white", CursorWidth: '0' }}
+                                    onChange={(e) => {
+                                        setDescription(e.target.value);
+                                        if (!touched) setTouched(true);
+                                    }}
+                                    onBlur={() => setTouched(true)}
+                                    sx={{ backgroundColor: "white" }}
+                                    helperText={touched && helperText ? helperText : ''}
+                                    FormHelperTextProps={{
+                                        sx: {
+                                            color: 'red',
+                                        }
+                                    }}
+                                // error={!!helperText}
                                 />
                             </Box>
                         </Grid>
-                        <Grid size={6} className='upload-resume inputs'>
+                        <Grid size={{ xs: 12, md: 6 }} className='upload-resume inputs'>
                             <Box className='jd-box'>
                                 <AttachFileIcon className='icons' sx={{ fontSize: 35, mr: 1, }} />
 
@@ -158,7 +218,11 @@ export default function Upload() {
                                         type="file"
                                         onChange={handleFileChange}
                                         // startIcon={<CloudUploadIcon />}
-                                        sx={{ backgroundColor: '#dbdbdb', color: 'black', height: '30px', minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px', lineHeight: 1, textTransform: "none" }}
+                                        sx={{
+                                            backgroundColor: '#dbdbdb', color: 'black', height: '30px',
+                                            minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px',
+                                            lineHeight: 1, textTransform: "none", boxShadow: 'none'
+                                        }}
                                     >
                                         Choose File
                                         <VisuallyHiddenInput type="file" accept=".pdf,.doc,.docx" multiple />
@@ -175,7 +239,7 @@ export default function Upload() {
                                     </Box>
                                 )}
                             </Box>
-                            <Box> <Button sx={{ float: "right", mt: 1, backgroundColor: "#00C28E", textTransform: "none" }}
+                            <Box> <Button sx={{ float: "right", mt: 1, backgroundColor: "#00C28E", textTransform: "none", boxShadow: 'none' }}
                                 onClick={handleAnalyze}
 
                                 disabled={!selectedFile || !description.trim()}
@@ -184,6 +248,18 @@ export default function Upload() {
 
                         </Grid>
                     </Grid>
+                    <Snackbar
+                        open={snackbarOpen}
+                        autoHideDuration={4000}
+                        onClose={handleSnackbarClose}
+                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                        sx={{ top: { xs: 10, sm: 0 } }}
+                    >
+                        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%', mt: 2 }}>
+                            {snackbarMessage}
+                        </Alert>
+
+                    </Snackbar>
                 </Box >
                 <div className='grids left-grid'>
                     <img src={grid} alt="grid" />
@@ -191,6 +267,8 @@ export default function Upload() {
                 <div className='grids right-grid'>
                     <img src={grid} alt="grid" />
                 </div>
+
+
             </Box >
         </>
     )

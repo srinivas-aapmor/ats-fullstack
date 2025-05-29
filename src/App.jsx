@@ -1,9 +1,7 @@
 import React from 'react';
-import LandingPage from './pages/LandingPage'
 import './App.css'
 import { Routes, Route } from 'react-router-dom';
 import routes from './configs/routesConfig';
-
 function App() {
 
   return (
@@ -12,6 +10,7 @@ function App() {
         <Routes>
           {routes.map(({ path, element }, index) => (
             <Route key={index} path={path} element={element} />
+            
           ))}
         </Routes>
       </div>
