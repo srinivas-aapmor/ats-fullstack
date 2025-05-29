@@ -12,8 +12,15 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import "../styles/landingpage.css";
 import Carousel from "../components/Carousel";
 import grid from "../assets/grid.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/upload");
+  }
+
   return (
     <>
       <CssBaseline />
@@ -75,6 +82,7 @@ export default function LandingPage() {
                   borderRadius: "30px",
                 }}
                 endIcon={<ArrowForwardIcon />}
+                onClick={handleGetStarted}
               >
                 Get Started
               </Button>

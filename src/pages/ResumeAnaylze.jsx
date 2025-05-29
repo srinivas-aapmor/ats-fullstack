@@ -70,7 +70,7 @@ export default function ResumeAnaylze() {
                             <Box sx={{
                                 display: 'flex', alignItems: 'center', backgroundColor: '#00C28E',
                                 color: 'primary.contrastText', borderRadius: 1, px: 0.5, py: 0.5, pr: 2, fontWeight: 500,
-                                fontSize: 'font', textTransform: 'none', width: 'fit-content'
+                                fontSize: 'font', textTransform: 'none', width: 'fit-content', mr: 1
                             }}>
                                 <FiberManualRecordIcon className="good-fit-icon" fontSize="small" sx={{ mr: 1 }} />
                                 Good Fit
