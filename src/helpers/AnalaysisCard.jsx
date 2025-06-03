@@ -12,7 +12,7 @@ export default function AnalysisCard({ title, details }) {
                 <Box className='inner-box'>
                     <Typography className='title' >
                         {title}
-                        <ArrowDropDownIcon className='arrow-icon' />
+                        {/* <ArrowDropDownIcon className='arrow-icon' /> */}
                     </Typography>
                     {
                         details.map((detail, index) => (

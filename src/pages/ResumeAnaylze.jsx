@@ -5,13 +5,20 @@ import '../styles/resumeAnalysis.css'
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import IconButton from '@mui/material/IconButton';
-import data from '../data.json'
+import datas from '../data.json'
 import ScoreCard from '../helpers/ScoreCard';
 import AnalysisCard from '../helpers/AnalaysisCard';
 import grid from '../assets/grid.svg'
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 
 export default function ResumeAnaylze() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const data = location.state?.data || datas;
+
+
     const overall_match = data.ats_analysis.overall_match_percentage;
     const skills_match = data.ats_analysis.skills_match_percentage;
     const experience_match = data.ats_analysis.experience_match_percentage || 0;
@@ -52,15 +59,10 @@ export default function ResumeAnaylze() {
 
 
 
-
-
-
-
-
     return (
         <div>
 
-            <Box className="analysis-main">
+            <Box className="analysis-main" >
                 <Navbar />
                 <Box className='analysis-content'>
                     <Box className='analysis-header'>

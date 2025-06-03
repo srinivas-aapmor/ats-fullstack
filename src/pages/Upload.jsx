@@ -80,11 +80,11 @@ export default function Upload() {
 
 
     const handleAnalyze = async () => {
-        // const error = validateJobDescription(description);
-        // if (error) {
-        //     showSnackbar(error);
-        //     return;
-        // }
+        const error = validateJobDescription(description);
+        if (error) {
+            showSnackbar(error);
+            return;
+        }
 
         formData.append('resume', selectedFile);
         formData.append('job_description', description)
@@ -96,7 +96,7 @@ export default function Upload() {
             })
             console.log(response);
             showSnackbar("Resume analyzed successfully!", 'success')
-            // navigate("/analyze", { state: { response: response.data } });
+            navigate("/analyze", { state: { response: response.data } });
         } catch (error) {
             console.error("Error analyzing resume:", error)
             showSnackbar("Failed to analyze resume. Please try again.");
