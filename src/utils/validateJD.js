@@ -9,7 +9,7 @@ function validateJobDescription(description) {
   if (trimmed.length < 50)
     return "*Job description is too short, please add more details.";
 
-  if (trimmed.length > 5000)
+  if (trimmed.length > 6000)
     return "*Job description is too long. Please shorten it.";
 
   if (/(.)\1{10,}/.test(trimmed))

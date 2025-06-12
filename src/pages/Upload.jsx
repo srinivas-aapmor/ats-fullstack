@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Paper, Typography, Button, TextField, Grid } from '@mui/material'
 import Navbar from '../components/Navbar'
 import '../styles/upload.css'
+import '../styles/loader.css'
 import grid from '../assets/grid.svg'
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import PublishIcon from '@mui/icons-material/Publish';
@@ -31,6 +32,7 @@ export default function Upload() {
     const [snackbarSeverity, setSnackbarSeverity] = useState('error');
     const [helperText, setHelperText] = useState('');
     const [touched, setTouched] = useState(false);
+    const [loading, setLoading] = useState(false)
 
     const Alert = React.forwardRef(function Alert(props, ref) {
         return <MuiAlert elevation={6} ref={ref} variant='filled' {...props} />;
@@ -88,6 +90,7 @@ export default function Upload() {
 
         formData.append('resume', selectedFile);
         formData.append('job_description', description)
+        setLoading(true)
         try {
             const response = await axios.post('http://192.168.1.50:8502/analyze_resume', formData, {
                 headers: {
@@ -95,14 +98,15 @@ export default function Upload() {
                 }
             })
             console.log(response);
+            setLoading(false)
             showSnackbar("Resume analyzed successfully!", 'success')
             navigate("/analyze", { state: { response: response.data } });
         } catch (error) {
             console.error("Error analyzing resume:", error)
             showSnackbar("Failed to analyze resume. Please try again.");
-
-
-        };
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {
@@ -268,6 +272,12 @@ export default function Upload() {
                     <img src={grid} alt="grid" />
                 </div>
 
+                {loading &&
+
+                    <div className="loader">
+                        <div class="justify-content-center jimu-primary-loading"></div>
+                    </div>
+                }
 
             </Box >
         </>

@@ -11,6 +11,9 @@ import AnalysisCard from '../helpers/AnalaysisCard';
 import grid from '../assets/grid.svg'
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ErrorIcon from '@mui/icons-material/Error';
 
 
 export default function ResumeAnaylze() {
@@ -58,7 +61,6 @@ export default function ResumeAnaylze() {
     ]
 
 
-
     return (
         <div>
 
@@ -69,14 +71,33 @@ export default function ResumeAnaylze() {
                         <Box className='analysis-header-left'>
                             <IconButton><ArrowBackIosNewIcon /></IconButton>
                             <Typography variant='h5' className='analysis-heading' sx={{ fontWeight: "700", fontSize: "28px" }}>Resume Analysis Result</Typography>
-                            <Box sx={{
-                                display: 'flex', alignItems: 'center', backgroundColor: '#00C28E',
-                                color: 'primary.contrastText', borderRadius: 1, px: 0.5, py: 0.5, pr: 2, fontWeight: 500,
-                                fontSize: 'font', textTransform: 'none', width: 'fit-content', mr: 1
-                            }}>
-                                <FiberManualRecordIcon className="good-fit-icon" fontSize="small" sx={{ mr: 1 }} />
-                                Good Fit
-                            </Box>
+
+                            {(() => {
+                                const score = parseFloat(overall_match);
+                                if (!isNaN(score)) {
+                                    if (score >= 80) {
+                                        return (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#00C28E', color: 'white', borderRadius: 1, px: 1, py: 0.5, fontWeight: 500, fontSize: '1rem' }}>
+                                                <CheckCircleIcon sx={{ mr: 1, color: 'white' }} fontSize="small" /> Good Fit
+                                            </Box>
+                                        );
+                                    } else if (score >= 60) {
+                                        return (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#FFC107', color: '#333', borderRadius: 1, px: 1, py: 0.5, fontWeight: 500, fontSize: '1rem' }}>
+                                                <WarningAmberIcon sx={{ mr: 1, color: '#333' }} fontSize="small" /> Average Fit
+                                            </Box>
+                                        );
+                                    } else {
+                                        return (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#F44336', color: 'white', borderRadius: 1, px: 1, py: 0.5, fontWeight: 500, fontSize: '1rem' }}>
+                                                <ErrorIcon sx={{ mr: 1, color: 'white' }} fontSize="small" /> Low Fit
+                                            </Box>
+                                        );
+                                    }
+                                } else {
+                                    return null;
+                                }
+                            })()}
                         </Box>
                         <Box className='analysis-header-right'>
                             <Button variant='contained' sx={{ textTransform: "none", backgroundColor: '#9a65fe', boxShadow: 'none' }} className='export-button'>Export</Button>
