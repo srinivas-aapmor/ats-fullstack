@@ -52,19 +52,21 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
 
     const navigate = useNavigate();
-
     async function clickName(row) {
-        console.log('Name clicked', row.email);
-        try {
-            const data = await getCandidateDetailsByEmail(row.email);
-            if (data) {
-                // console.log('Candidate details fetched by email:', data);
-                navigate('/resume-analyze', { state: { data } });
-            }
-        } catch (error) {
-            console.log('Error fetching candidate details by email:', error);
-        }
+        // console.log('Name clicked', row.email);
+        const email = row.email
+        navigate("/resume-analyze", { state: { email } });
+
     }
+    async function clickDownLoad(row) {
+        if (!row.fileURL) {
+            alert('No resume file available for this candidate.');
+            return;
+        }
+
+        window.open(row.fileURL, '_blank');
+    }
+
 
     const columns = [
         {
@@ -135,8 +137,8 @@ export default function AdminDashboard() {
             headerAlign: 'center',
             align: 'center',
             minWidth: 70,
-            renderCell: () => (
-                <IconButton >
+            renderCell: (params) => (
+                <IconButton onClick={() => clickDownLoad(params.row)}>
                     <DownloadIcon />
                 </IconButton>
             ),
@@ -165,10 +167,10 @@ export default function AdminDashboard() {
         try {
             const res = await deleteCandidate(id);
             if (res) {
-                console.log("Candidate deleted successfully");
+                // console.log("Candidate deleted successfully");
                 setRows((prevRows) => prevRows.filter((row) => row.id !== id));
             }
-            console.log(res);
+            // console.log(res);
         } catch (error) {
             console.error("Error deleting candidate:", error);
         }
@@ -206,6 +208,7 @@ export default function AdminDashboard() {
                                 : item?.ats_analysis?.highest_education?.degree ||
                                 item?.ats_analysis?.highest_education?.qualification ||
                                 'Not mentioned',
+                            fileURL: item?.file_url
                         }
 
                     }
@@ -221,7 +224,6 @@ export default function AdminDashboard() {
         fetchCandidateDetails();
     }, []);
     // console.log(rows)
-
     const filteredRows = useMemo(() => {
         if (!experienceFilter) return rows;
         return rows.filter((row) => {
@@ -251,7 +253,7 @@ export default function AdminDashboard() {
                 <Navbar />
                 <Box className='admin-content' >
                     <Box className='admin-header'>
-                        <IconButton><ArrowBackIosNewIcon /></IconButton>
+                        <IconButton onClick={() => { navigate('/upload') }}><ArrowBackIosNewIcon /></IconButton>
                         <Typography variant='h5' className='analysis-heading' sx={{ fontWeight: "600", fontSize: "25px" }}>Recent Resumes</Typography>
                     </Box>
                     <Box className='admin-table-outside'>

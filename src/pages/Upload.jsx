@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { Box, Paper, Typography, Button, TextField, Grid } from '@mui/material'
 import Navbar from '../components/Navbar'
 import '../styles/upload.css'
@@ -18,21 +18,24 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import validateJobDescription from '../utils/validateJD'
 import CloseIcon from '@mui/icons-material/Close';
+import { parseResume } from '../services/parseResume'
+import UserContext from '../context/UserContext'
 
 
 
 export default function Upload() {
     const navigate = useNavigate();
     const [description, setDescription] = useState('');
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [fileName, setFileName] = useState(null);
-    const formData = new FormData();
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [fileNames, setFileNames] = useState([]);
+    // const formData = new FormData();
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('error');
     const [helperText, setHelperText] = useState('');
     const [touched, setTouched] = useState(false);
     const [loading, setLoading] = useState(false)
+    const { user } = useContext(UserContext);
 
     const Alert = React.forwardRef(function Alert(props, ref) {
         return <MuiAlert elevation={6} ref={ref} variant='filled' {...props} />;
@@ -53,17 +56,23 @@ export default function Upload() {
     }
     // console.log(data.ats_analysis.missing_skills);
 
-    const handleRemoveFiles = () => {
-        setFileName(null);
-        setSelectedFile(null);
+
+    const handleRemoveFile = (index) => {
+        const newFileNames = [...fileNames];
+        const newSelectedFiles = [...selectedFiles];
+        newFileNames.splice(index, 1);
+        newSelectedFiles.splice(index, 1);
+        setFileNames(newFileNames);
+        setSelectedFiles(newSelectedFiles);
     };
 
     const handleFileChange = (event) => {
-
-        const files = event.target.files;
-        const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        // alert("Resume Uploaded");
-
+        const files = Array.from(event.target.files);
+        const validTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
         for (let file of files) {
             if (!validTypes.includes(file.type)) {
                 alert('Only PDF or DOC files are allowed.');
@@ -71,15 +80,9 @@ export default function Upload() {
                 return;
             }
         }
-
-
-        setSelectedFile(files[0]);
-
-        setFileName(files[0].name);
-
+        setSelectedFiles(files);
+        setFileNames(files.map(f => f.name));
     };
-
-
 
     const handleAnalyze = async () => {
         const error = validateJobDescription(description);
@@ -87,25 +90,40 @@ export default function Upload() {
             showSnackbar(error);
             return;
         }
-
-        formData.append('resume', selectedFile);
-        formData.append('job_description', description)
-        setLoading(true)
+        setLoading(true);
         try {
-            const response = await axios.post('http://192.168.1.50:8502/analyze_resume', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('resumes', file); // use 'resumes' as key for multiple files
+            });
+            formData.append('job_description', description);
+            const response = await parseResume(formData);
+
+            // expects array of results
+            if (response.length === 1) {
+                const email = response[0].data.email;
+                console.log(response)
+                // console.log(response[0] )
+                if (email) {
+                    showSnackbar("All resumes analyzed successfully!", 'success');
+                    navigate("/resume-analyze", { state: { email } });
+                } else {
+                    showSnackbar("Could not extract email try another resume", 'error')
                 }
-            })
-            console.log(response);
-            setLoading(false)
-            showSnackbar("Resume analyzed successfully!", 'success')
-            navigate("/analyze", { state: { response: response.data } });
+            }
+            else {
+                showSnackbar("All resumes analyzed successfully!", 'success');
+                navigate("/resumes-list", { state: { response } });
+                // console.log(response)
+            }
+
+            // showSnackbar("All resumes analyzed successfully!", 'success');
+            // navigate("/resume-analyze", { state: { data } });
         } catch (error) {
-            console.error("Error analyzing resume:", error)
-            showSnackbar("Failed to analyze resume. Please try again.");
+            console.error("Error analyzing resumes:", error);
+            showSnackbar("Failed to analyze one or more resumes. Please try again.");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 
@@ -141,7 +159,7 @@ export default function Upload() {
                 <Navbar />
                 <Box className='upload-container'>
                     <Typography gutterBottom variant="h6" className='welcome-user' sx={{ color: '#8638e6', fontWeight: "bold", fontSize: "24px", mb: "2%", mt: "2%" }}>
-                        Welcome Sai Teja,
+                        Welcome {user.name},
                     </Typography>
                     <Grid container spacing={5} className="upload-inputs">
                         <Grid size={{ xs: 12, md: 6 }} className='upload-description inputs'>
@@ -149,17 +167,20 @@ export default function Upload() {
                                 <ContentPasteIcon className='icons' sx={{ fontSize: 35, mr: 1, }} />
                                 <Typography sx={{ fontSize: "20px", fontWeight: "bold" }} className='jd-heading'>Add Your Job Description</Typography>
                             </Box>
-                            <Box>
+                            <Box sx={{
+                                border: '1px solid  #B2BEB5',
+                                borderRadius: '5px',
+                                padding: 1,
+                                backgroundColor: 'white',
+                            }}
+                            >
 
                                 <TextField
-                                    className='jd-input'
+                                    className="jd-input"
                                     placeholder="Paste Or Type Your Job Description"
                                     required
-                                    variant="outlined"
+                                    variant="standard" // Removes the border completely
                                     multiline
-                                    minRows={9}
-                                    maxRows={9}
-                                    // Height="120px"
                                     fullWidth
                                     value={description}
                                     onChange={(e) => {
@@ -167,23 +188,42 @@ export default function Upload() {
                                         if (!touched) setTouched(true);
                                     }}
                                     onBlur={() => setTouched(true)}
-                                    sx={{ backgroundColor: "white" }}
-                                    helperText={touched && helperText ? helperText : ''}
-                                    FormHelperTextProps={{
+                                    InputProps={{
+                                        disableUnderline: true,
                                         sx: {
-                                            color: 'red',
-                                        }
+                                            height: '15rem',
+                                            alignItems: 'flex-start', // 🧠 THIS pushes placeholder to top
+                                            padding: 0,
+                                        },
                                     }}
-                                // error={!!helperText}
+                                    sx={{
+                                        '& .MuiInputBase-inputMultiline': {
+                                            padding: '16px',
+                                            overflowY: 'auto',
+                                            height: '100%',
+                                            resize: 'none',
+                                            boxSizing: 'border-box',
+                                        },
+                                        backgroundColor: 'white',
+                                    }}
                                 />
+
+
                             </Box>
+                            {touched && helperText && (
+                                <Typography sx={{ color: 'red', mt: 0.5, fontSize: '0.875rem' }}>
+                                    {helperText}
+                                </Typography>
+                            )}
                         </Grid>
+
                         <Grid size={{ xs: 12, md: 6 }} className='upload-resume inputs'>
                             <Box className='jd-box'>
                                 <AttachFileIcon className='icons' sx={{ fontSize: 35, mr: 1, }} />
 
                                 <Typography sx={{ fontSize: "20px", fontWeight: "bold" }} className='jd-heading'>Upload Your Resume</Typography>
                             </Box>
+
                             <Box sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -191,7 +231,8 @@ export default function Upload() {
                                 alignItems: 'center',
                                 background: 'white',
                                 border: '2px dashed #00C28E',
-                                minHeight: '75%',
+                                minHeight: '16rem',
+                                maxHeight: '16rem',
                                 borderRadius: '5px',
                                 width: '100%',
                                 mb: '10px',
@@ -199,54 +240,101 @@ export default function Upload() {
 
                             }}
                             >
-                                < PublishIcon sx={{
-                                    fontSize: 75,
-                                    backgroundColor: '#E1FFF5',
-                                    color: '#00C28E',
-                                    borderRadius: "50%",
-                                    padding: "15px"
+                                {(fileNames.length === 0 || fileNames.length === 1) ?
+                                    <>
+                                        < PublishIcon sx={{
+                                            fontSize: 75,
+                                            backgroundColor: '#E1FFF5',
+                                            color: '#00C28E',
+                                            borderRadius: "50%",
+                                            padding: "15px"
 
-                                }} />
+                                        }} />
 
-                                <Typography variant="h7" color="black">
-                                    Upload Your Resume
-                                </Typography>
-                                <Typography sx={{ color: 'grey' }} variant="h7">
-                                    {' Support Format be .PDF,DOC Only(Less than 2 MB)'}
-                                </Typography>
-                                {!fileName && (
-                                    <Button
-                                        component="label"
-                                        variant="contained"
-                                        className='Upload'
-                                        type="file"
-                                        onChange={handleFileChange}
-                                        // startIcon={<CloudUploadIcon />}
-                                        sx={{
-                                            backgroundColor: '#dbdbdb', color: 'black', height: '30px',
-                                            minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px',
-                                            lineHeight: 1, textTransform: "none", boxShadow: 'none'
-                                        }}
-                                    >
-                                        Choose File
-                                        <VisuallyHiddenInput type="file" accept=".pdf,.doc,.docx" multiple />
-                                    </Button>
-                                )}
-                                {fileName && (
-                                    <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: 1 }}>
-                                        <Typography variant="body2" sx={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {fileName}
+                                        <Typography variant="h7" color="black">
+                                            Upload Your Resume
                                         </Typography>
-                                        <IconButton aria-label="delete" onClick={handleRemoveFiles} size="small" color="error">
-                                            <DeleteIcon />
-                                        </IconButton>
+                                        <Typography sx={{ color: 'grey' }} variant="h7">
+                                            {' Support Format be .PDF,DOC Only(Less than 2 MB)'}
+                                        </Typography>
+                                        {!fileNames.length > 0 && (
+                                            <Button
+                                                component="label"
+                                                variant="contained"
+                                                className='Upload'
+                                                type="file"
+                                                onChange={handleFileChange}
+                                                // startIcon={<CloudUploadIcon />}
+                                                sx={{
+                                                    backgroundColor: '#dbdbdb', color: 'black', height: '30px',
+                                                    minWidth: '130px', marginTop: '10px', padding: '4px 8px', fontSize: '15px',
+                                                    lineHeight: 1, textTransform: "none", boxShadow: 'none'
+                                                }}
+                                            >
+                                                Choose File
+                                                <VisuallyHiddenInput type="file" accept=".pdf,.doc,.docx" multiple />
+                                            </Button>
+                                        )}
+                                        {fileNames.length > 0 && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: 1 }}>
+                                                <Typography variant="body2" sx={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {fileNames}
+                                                </Typography>
+                                                <IconButton aria-label="delete" onClick={() => { handleRemoveFile(0) }} size="small" color="error">
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Box>
+                                        )}
+                                    </>
+                                    :
+                                    <Box sx={{ width: '100%', px: 2, py: 1, overflowY: 'auto', maxHeight: '14rem' }}>
+                                        <Typography sx={{ fontWeight: 'bold', fontSize: '18px', mb: 1 }}>Uploaded Resumes</Typography>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                            {fileNames.map((fileName, index) => (
+                                                <Box
+                                                    key={index}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        backgroundColor: '#f9f9f9',
+                                                        borderRadius: '6px',
+                                                        padding: '6px 10px',
+                                                        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+                                                        width: '100%',
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            maxWidth: '80%',
+                                                            whiteSpace: 'nowrap',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {fileName}
+                                                    </Typography>
+                                                    <IconButton
+                                                        aria-label="delete"
+                                                        onClick={() => handleRemoveFile(index)}
+                                                        size="small"
+                                                        color="error"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+                                        </Box>
                                     </Box>
-                                )}
+
+                                }
                             </Box>
                             <Box> <Button sx={{ float: "right", mt: 1, backgroundColor: "#00C28E", textTransform: "none", boxShadow: 'none' }}
                                 onClick={handleAnalyze}
 
-                                disabled={!selectedFile || !description.trim()}
+                                disabled={!selectedFiles.length || !description.trim()}
                                 variant='contained'>< SendIcon sx={{ mr: 1 }} />Analyze</Button></Box>
 
 
@@ -275,7 +363,7 @@ export default function Upload() {
                 {loading &&
 
                     <div className="loader">
-                        <div class="justify-content-center jimu-primary-loading"></div>
+                        <div className="justify-content-center jimu-primary-loading"></div>
                     </div>
                 }
 

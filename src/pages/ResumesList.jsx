@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from '../components/Navbar';
 import {
   Box,
@@ -24,135 +24,12 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SearchIcon from '@mui/icons-material/Search';
 import { DataGrid } from '@mui/x-data-grid';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import grid from '../assets/grid.svg';
-
+import { deleteCandidateForResumesList } from "../services/getCandidateDetails";
+import GoBack from "./GoBack";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-const resumeData = [
-  {
-    sl: 1,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 2,
-    score: "96%",
-    name: "Ganesh",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 3,
-    score: "94%",
-    name: "Srinivas",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 4,
-    score: "99%",
-    name: "Appmore",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 5,
-    score: "98%",
-    name: "Ciril",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 6,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 7,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 8,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 9,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 10,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-  {
-    sl: 11,
-    score: "98%",
-    name: "Satheesh Kyahtam",
-    email: "satheesh@1234",
-    skills: "Java, React, Nodejs",
-    match: "98%",
-    contact: "1234567894",
-    experience: "8+ Years",
-    education: "MS Graduate",
-  },
-
-];
 
 const scoreRanges = [
   { label: "All Scores", value: "" },
@@ -168,7 +45,6 @@ const scoreRanges = [
 ];
 
 const ResumeResults = () => {
-  const [data, setData] = useState(resumeData);
   const [searchText, setSearchText] = useState('');
   const [selectedRange, setSelectedRange] = useState("");
   const [openDeleteAllDialog, setOpenDeleteAllDialog] = useState(false);
@@ -177,10 +53,46 @@ const ResumeResults = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const location = useLocation();
+  const [resumeData, setRows] = useState([])
 
-  const handleDeleteRow = (sl) => {
-    const updatedData = data.filter(row => row.sl !== sl);
-    setData(updatedData);
+  const [data, setData] = useState(resumeData);
+
+  const data_array = location.state?.response
+
+
+  // Defensive: If data_array is not present, show GoBack and do NOT run useEffect
+  if (!data_array) {
+    return <GoBack message="No candidate selected. Please upload a resume first." />;
+  }
+
+  useEffect(() => {
+    setRows(
+      data_array
+        .filter((data) => data.data && data.data.email && data.data.email !== 'unknown')
+        .map((data, index) => {
+          // console.log(data.data.email);
+          return {
+            id: data.data?._id || null,
+            sl: index + 1,
+            score: `${data.data?.ats_score}%`,
+            name: data.data?.candidate_name,
+            email: data.data?.email,
+            skills: Array.isArray(data?.data?.matched_skills)
+              ? data.data.matched_skills.join(', ')
+              : 'No skills listed',
+            match: `${data.data?.skills_match_percentage}%`,
+            contact: data.data?.contact,
+            experience: data.data?.experience_years,
+            education: data.data?.education
+          };
+        })
+    );
+  }, [data_array]);
+  // console.log(rows)
+
+  const handleDeleteRow = (id) => {
+    setRows((prevRows) => prevRows.filter(row => row.id !== id));
   };
 
   const handleDeleteAll = () => {
@@ -196,11 +108,12 @@ const ResumeResults = () => {
       backgroundColor: '#a5d6a7',
     },
   };
-  const filteredData = data.filter((row) => {
-    const scoreValue = parseInt(row.score.replace("%", ""));
+  const filteredData = resumeData.filter((row) => {
+
+
 
     const inSearch = Object.values(row).some((value) =>
-      value.toString().toLowerCase().includes(searchText.toLowerCase())
+      value && value.toString().toLowerCase().includes(searchText.toLowerCase())
     );
 
     if (selectedRange && selectedRange !== "") {
@@ -233,10 +146,29 @@ const ResumeResults = () => {
     saveAs(dataBlob, 'ResumeResults.xlsx');
   };
 
+  async function clickName(row) {
+    console.log('Name clicked', row.email);
+    const email = row.email
+    navigate("/resume-analyze", { state: { email } });
+
+  }
+
   const columns = [
     { field: 'sl', headerName: 'SL No.', width: 90 },
     { field: 'score', headerName: 'Score', width: 100 },
-    { field: 'name', headerName: 'Candidate Name', width: 200 },
+    {
+      field: 'name',
+      headerName: 'Candidate Name',
+      width: 200,
+      renderCell: (params) => (
+        <span
+          className='candidate-name'
+          onClick={() => { clickName(params.row) }}
+        >
+          {params.row.name || 'Unnamed Candidate'}
+        </span>
+      ),
+    },
     { field: 'email', headerName: 'Email ID', width: 200 },
     { field: 'skills', headerName: 'Skills', width: 250 },
     { field: 'match', headerName: 'Match', width: 100 },
@@ -244,25 +176,38 @@ const ResumeResults = () => {
     { field: 'experience', headerName: 'Experience', width: 150 },
     { field: 'education', headerName: 'Education', width: 150 },
     {
-      field: 'actions',
-      headerName: (
-        <IconButton color="error"
-          //onClick={handleDeleteAll} 
-          onClick={() => setOpenDeleteAllDialog(true)}
-          title="Delete All">
-          <DeleteIcon />
+      field: "delete",
+      headerName: "Delete",
+      flex: 0.4,
+      sortable: false,
+      headerAlign: 'center',
+      minWidth: 70,
+      renderCell: (params) => (
+        <IconButton onClick={() => {
+          // console.log(params.id)
+          setSelectedRowId(params.id);
+          setOpenDialog(true);
+        }}>
+          <DeleteIcon color="error" />
         </IconButton>
       ),
-      width: 100,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton color="error" onClick={() => { setSelectedRowId(params.row.sl); setOpenDialog(true) }}>
-          <DeleteIcon />
-        </IconButton>
-      )
-    }
+      align: 'center',
+    },
   ];
 
+  async function deleteCandidateById(id) {
+    try {
+      console.log(id)
+      const res = await deleteCandidateForResumesList(id);
+      if (res) {
+        console.log("Candidate deleted successfully");
+        setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+      }
+      console.log(res);
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+    }
+  }
 
   return (
     <div>
@@ -272,7 +217,7 @@ const ResumeResults = () => {
           {/* Header */}
           <Box className="analysis-header" display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2}>
             <Box display="flex" alignItems="center" gap={2}>
-              <IconButton><ArrowBackIosNewIcon /></IconButton>
+              <IconButton onClick={() => { navigate(-1) }}><ArrowBackIosNewIcon /></IconButton>
               <Typography variant='h5' sx={{ fontWeight: 700, fontSize: "28px" }}>Resume Results</Typography>
             </Box>
             <TextField
@@ -405,6 +350,9 @@ const ResumeResults = () => {
                     },
                   }}
                   pageSizeOptions={[10, 20, 50]}
+                  checkboxSelection
+                  disableRowSelectionOnClick
+                  disableColumnSelector
                 />
 
               </Box>
@@ -427,7 +375,7 @@ const ResumeResults = () => {
                   </Button>
                   <Button
                     onClick={() => {
-                      handleDeleteRow(selectedRowId);
+                      deleteCandidateById(selectedRowId); // Pass the correct id
                       setOpenDialog(false);
                     }}
                     color="error"

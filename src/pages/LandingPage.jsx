@@ -1,4 +1,6 @@
-import React from "react";
+import React, {
+  useContext
+} from "react";
 import {
   Box,
   Card,
@@ -13,10 +15,12 @@ import "../styles/landingpage.css";
 import Carousel from "../components/Carousel";
 import grid from "../assets/grid.svg";
 import { useNavigate } from "react-router-dom";
+import UserContext from "../context/UserContext";
 
 export default function LandingPage() {
   const navigate = useNavigate();
-
+  const userContext = useContext(UserContext);
+  const user = userContext && userContext.user ? userContext.user : userContext;
   const handleGetStarted = () => {
     navigate("/upload");
   }
@@ -25,10 +29,12 @@ export default function LandingPage() {
     <div className="landing-page-main">
       <CssBaseline />
       {/* Background Box */}
-      <Box className="BoxOne" sx={{height: {
-      xs: '60px',  // or a smaller value like '80vh'
-      md: '100%',
-    }}}>
+      <Box className="BoxOne" sx={{
+        height: {
+          xs: '60px',  // or a smaller value like '80vh'
+          md: '100%',
+        }
+      }}>
         <Box
           sx={{
             p: "20px",
@@ -70,7 +76,7 @@ export default function LandingPage() {
                 variant="body2"
                 sx={{ color: "#9a64ff", fontWeight: 550 }}
               >
-                Welcome Jyothi
+                Welcome {user.name}
               </Typography>
 
               <Typography
