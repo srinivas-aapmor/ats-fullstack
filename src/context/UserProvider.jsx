@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import UserContext from './UserContext';
-import { axiosInstance } from '../utils/axios';
-import Loader from '../helpers/Loader'
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
+import Loader from '../helpers/Loader';
 
 export default function UserProvider({ children }) {
     const [user, setUser] = useState({
@@ -14,31 +15,30 @@ export default function UserProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkUser = async () => {
+        const checkUser = () => {
             try {
-                const res = await axiosInstance.get('auth/me', { withCredentials: true });
-                // console.log(res.data.logginIn)
-                if (res.data.logginIn) {
-                    const userData = res.data.user;
-                    // console.log(userData.FullName)   
-                    setUser({
-                        name: userData.FullName,
-                        email: userData.Email,
-                        role: userData.SpaceName,
-                        access: userData.Access || []
-                    });
-                }
+                const token = Cookies.get('token');
+                if (!token) throw new Error("No token");
+
+                const decoded = jwtDecode(token);
+
+                setUser({
+                    name: decoded.FullName,
+                    email: decoded.Email,
+                    role: decoded.SpaceName,
+                    access: decoded.Access || []
+                });
             } catch (err) {
-                console.log('User not logged in');
+                console.log('User not logged in or token invalid:', err.message);
             } finally {
                 setLoading(false);
             }
         };
+
         checkUser();
     }, []);
 
-    if (loading) return <div><Loader /></div>;
-    // console.log(user)
+    if (loading) return <Loader />;
 
     return (
         <UserContext.Provider value={{ user, setUser }}>

@@ -5,7 +5,7 @@ import ResumesList from "../pages/ResumesList";
 import AdminDashboard from '../pages/AdminDashboard';
 import LoginCallback from "../pages/LoginCallback";
 import NavigatetoAuthX from "../pages/NavigateToAuthX";
-import AppLoader from "../pages/AppLoader";
+
 import AccessTags from '../utils/accessTags'
 import Unauthorized from '../pages/Unauthorized'
 import NotFound from "../pages/NotFound";
@@ -13,7 +13,7 @@ import NotFound from "../pages/NotFound";
 const routes = [
   {
     path: '/',
-    element: <AppLoader />
+    element: <LandingPage />
   },
   {
     path: '/login',

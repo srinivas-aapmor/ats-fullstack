@@ -1,16 +1,16 @@
-// context/UserContext.js
-
 import { createContext, useContext, useState, useEffect } from 'react';
-import { axiosInstance } from '../utils/axios';
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
+import Loader from '../helpers/Loader';
 
-// 1. Create Context
+// 1. Create the context
 const UserContext = createContext({
     user: { name: '', email: '', role: '', access: [] },
     setUser: () => { },
     loading: true
 });
 
-// 2. Provider Component
+// 2. Provider component
 export function UserProvider({ children }) {
     const [user, setUser] = useState({
         name: '',
@@ -18,26 +18,25 @@ export function UserProvider({ children }) {
         role: '',
         access: []
     });
-
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkUser = async () => {
+        const checkUser = () => {
             try {
-                const res = await axiosInstance.get('auth/me', {
-                    withCredentials: true
-                });
-                if (res.data.logginIn) {
-                    const u = res.data.user;
-                    setUser({
-                        name: u.FullName,
-                        email: u.Email,
-                        role: u.SpaceName,
-                        access: u.Access || []
-                    });
+                const token = Cookies.get('token');
+                if (token) {
+                    const decoded = jwtDecode(token);
+                    if (decoded) {
+                        setUser({
+                            name: decoded.FullName,
+                            email: decoded.Email,
+                            role: decoded.SpaceName,
+                            access: decoded.Access || []
+                        });
+                    }
                 }
             } catch (err) {
-                console.log('User not logged in');
+                console.log('Token is invalid or not present');
             } finally {
                 setLoading(false);
             }
@@ -46,14 +45,16 @@ export function UserProvider({ children }) {
         checkUser();
     }, []);
 
+    if (loading) return <Loader />;
+
     return (
-        <UserContext.Provider value={{ user, setUser, loading }}>
+        <UserContext.Provider value={{ user, setUser }}>
             {children}
         </UserContext.Provider>
     );
 }
 
-// 3. Custom Hook
+// 3. Custom hook
 export function useUser() {
     return useContext(UserContext);
 }

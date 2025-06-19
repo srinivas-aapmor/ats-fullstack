@@ -192,7 +192,7 @@ export default function Upload() {
                                         disableUnderline: true,
                                         sx: {
                                             height: '15rem',
-                                            alignItems: 'flex-start', // 🧠 THIS pushes placeholder to top
+                                            alignItems: 'flex-start',
                                             padding: 0,
                                         },
                                     }}

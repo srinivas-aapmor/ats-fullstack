@@ -1,61 +1,60 @@
 import { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-import { axiosInstance } from "../utils/axios";
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
+
 import UserContext from "../context/UserContext";
-import Loader from '../helpers/Loader'
+import Loader from '../helpers/Loader';
 
 export default function LoginCallback() {
-
     const navigate = useNavigate();
     const { setUser } = useContext(UserContext);
-    // const { user, } = userContext ? userContext.user || userContext : {};
-    // console.log(user)
     const REDIRECT_URL = encodeURIComponent(import.meta.env.VITE_REDIRECT_URL);
 
     useEffect(() => {
         const run = async () => {
-            const params = new URLSearchParams(window.location.search)
-            const token = params.get('token')
-            if (token) {
-                try {
-                    const res = await axiosInstance.post(
-                        'auth/callback',
-                        { token },
-                        {
-                            // withCredentials: true,
-                            headers: {
-                                'Content-Type': "application/json"
-                            }
-                        }
-                    );
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
 
-                    const userData = res.data.user;
-                    // console.log("Decoded token from backend:", userData);
+            if (token) {
+                Cookies.set('token', token, {
+                    expires: 7,
+                    sameSite: 'Strict',
+                    secure: location.protocol === 'https:'
+                });
+
+                try {
+                    const decoded = jwtDecode(token);
+                    console.log(decoded, "decoded");
 
                     setUser({
-                        name: userData.FullName,
-                        email: userData.Email,
-                        role: userData.SpaceName,
-                        access: userData.Access || []
+                        name: decoded.FullName,
+                        email: decoded.Email,
+                        role: decoded.SpaceName,
+                        access: decoded.Access || []
                     });
 
-                    navigate('/home');
-                } catch (err) {
-                    console.error("Failed to store token in cookie or decode:", err);
-                    window.location.href = `https://authxui-uat.vercel.app/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
-                }
-            } else {
-                window.location.href = `https://authxui-uat.vercel.app/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
+                    // ✅ Give time for cookie + state to stabilize
+                    setTimeout(() => {
+                        navigate('/home');
+                    }, 100);
 
-            };
-        }
+                } catch (err) {
+                    console.error("Token decoding failed:", err);
+                    window.location.href = `${import.meta.env.VITE_AUTHX_URL}/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
+                }
+
+            } else {
+                window.location.href = `${import.meta.env.VITE_AUTHX_URL}/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
+            }
+        };
+
         run();
-    }, [navigate])
+    }, []);
 
     return (
         <div>
             <Loader />
         </div>
-    )
+    );
 }
