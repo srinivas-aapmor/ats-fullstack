@@ -25,7 +25,7 @@ export default function UserProvider({ children }) {
                 setUser({
                     name: decoded.FullName,
                     email: decoded.Email,
-                    role: decoded.SpaceName,
+                    role: decoded.Department,
                     access: decoded.Access || []
                 });
             } catch (err) {

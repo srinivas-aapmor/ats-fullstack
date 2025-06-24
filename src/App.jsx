@@ -13,56 +13,54 @@ function App() {
   const { setUser } = useContext(UserContext);
 
   useEffect(() => {
-    const token = Cookies.get('token');
+    // Don't run this logic on the login callback route!
+    if (location.pathname.startsWith('/callback/login')) return;
 
+    const token = Cookies.get('token');
     try {
       if (!token) throw new Error('No token');
-
       const decoded = jwtDecode(token);
-
       setUser({
         name: decoded.FullName,
         email: decoded.Email,
-        role: decoded.SpaceName,
+        role: decoded.Department,
         access: decoded.Access || []
       });
-
-      // If user is at root or login, send them to home
-      if (location.pathname === '/' || location.pathname === '/login') {
+      if (location.pathname === '/') {
         navigate('/home');
       }
-
     } catch (err) {
       console.warn('Token invalid or missing:', err.message);
-
-      // Only redirect to login if not already there
       if (location.pathname !== '/login') {
         navigate('/login');
       }
     }
-  }, []);
+  }, [location.pathname]);
 
   return (
     <div>
       <Routes>
-        {routes.map(({ path, element, requiredAccess, allowedPreviousPaths = [] }, index) => (
-          <Route
-            key={index}
-            path={path}
-            element={
-              requiredAccess ? (
-                <ProtectedRoute
-                  requiredAccess={requiredAccess}
-                  allowedPreviousPaths={allowedPreviousPaths}
-                >
-                  {element}
-                </ProtectedRoute>
-              ) : (
-                element
-              )
-            }
-          />
-        ))}
+        {routes.map(({ path, element, requiredAccess }, index) => {
+          const hasAccess = Array.isArray(requiredAccess) && requiredAccess.length > 0;
+
+          return (
+            <Route
+              key={index}
+              path={path}
+              element={
+                hasAccess ? (
+                  <ProtectedRoute
+                    requiredAccess={requiredAccess}
+                  >
+                    {element}
+                  </ProtectedRoute>
+                ) : (
+                  element
+                )
+              }
+            />
+          );
+        })}
       </Routes>
     </div>
   );

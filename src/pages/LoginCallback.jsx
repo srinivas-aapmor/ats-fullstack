@@ -1,60 +1,53 @@
 import { useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-
 import UserContext from "../context/UserContext";
 import Loader from '../helpers/Loader';
 
 export default function LoginCallback() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { setUser } = useContext(UserContext);
-    const REDIRECT_URL = encodeURIComponent(import.meta.env.VITE_REDIRECT_URL);
+
 
     useEffect(() => {
-        const run = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const token = params.get('token');
+        // Extract token from query string
+        const params = new URLSearchParams(location.search);
+        const token = params.get('token');
 
-            if (token) {
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                console.log("Decoded JWT:", decoded);
+
+                // Set token in cookie
                 Cookies.set('token', token, {
                     expires: 7,
                     sameSite: 'Strict',
                     secure: location.protocol === 'https:'
                 });
 
-                try {
-                    const decoded = jwtDecode(token);
-                    console.log(decoded, "decoded");
+                // Set user context
+                setUser({
+                    name: decoded.FullName,
+                    email: decoded.Email,
+                    role: decoded.Department,
+                    access: decoded.Access || []
+                });
 
-                    setUser({
-                        name: decoded.FullName,
-                        email: decoded.Email,
-                        role: decoded.SpaceName,
-                        access: decoded.Access || []
-                    });
+                // Navigate once context is updated
+                navigate('/home', { replace: true });
 
-                    // ✅ Give time for cookie + state to stabilize
-                    setTimeout(() => {
-                        navigate('/home');
-                    }, 100);
-
-                } catch (err) {
-                    console.error("Token decoding failed:", err);
-                    window.location.href = `${import.meta.env.VITE_AUTHX_URL}/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
-                }
-
-            } else {
-                window.location.href = `${import.meta.env.VITE_AUTHX_URL}/?redirect_uri=${REDIRECT_URL}&domain=${import.meta.env.VITE_DOMAIN}`;
+            } catch (err) {
+                console.error("Invalid token:", err.message);
+                navigate('/login', { replace: true });
             }
-        };
+        } else {
+            // No token found
+            navigate('/login', { replace: true });
+        }
+    }, [location, setUser, navigate]);
 
-        run();
-    }, []);
-
-    return (
-        <div>
-            <Loader />
-        </div>
-    );
+    return <Loader />;
 }
