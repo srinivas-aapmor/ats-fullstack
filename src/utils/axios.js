@@ -5,5 +5,5 @@ export const axiosInstance = axios.create({
     import.meta.env.MODE === "development"
       ? `http://${import.meta.env.VITE_IP}:${import.meta.env.VITE_PORT}/`
       : "/",
-  withCredentials: true,
+  // withCredentials: true,
 });
