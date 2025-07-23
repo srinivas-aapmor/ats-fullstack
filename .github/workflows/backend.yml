@@ -1,0 +1,75 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flask-ats-backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_BACKEND }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS with Helm
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_BACKEND }}
+          IMAGE_TAG: ${{ github.sha }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          helm upgrade --install backend-release ../helm \
+            --set backend.image.repository=$ECR_REGISTRY/$ECR_REPOSITORY \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set backend.env[0].value=$S3_REGION \
+            --set backend.env[1].value=$S3_BUCKET_NAME \
+            --set backend.env[2].valueFromSecret=$AWS_ACCESS_KEY \
+            --set backend.env[3].valueFromSecret=$AWS_SECRET_KEY \
+            --set backend.env[4].valueFromSecret=$MONGO_URI \
+            --set backend.env[5].valueFromSecret=$OPENAI_API_KEY \
+            --namespace ats-backend --wait
+
+
+

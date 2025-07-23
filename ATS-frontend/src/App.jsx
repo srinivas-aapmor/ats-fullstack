@@ -41,6 +41,7 @@ function App() {
     <div>
       <Routes>
         {routes.map(({ path, element, requiredAccess }, index) => {
+          console.log(`Registering route: ${path}`);
           const hasAccess = Array.isArray(requiredAccess) && requiredAccess.length > 0;
 
           return (
