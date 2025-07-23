@@ -3,11 +3,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: fullstack-ingress
-  {{- if .Values.ingress.className }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
-  {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  ingressClassName: {{ .Values.ingress.className }}
   rules:
     {{- range .Values.ingress.hosts }}
     - host: {{ .host }}
@@ -18,13 +19,13 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: frontend
+                name: {{- if eq .path "/frontend" }}frontend{{ else }}backend{{ end }}
                 port:
-                  number: 3000
+                  number: {{- if eq .path "/frontend" }}3000{{ else }}5000{{ end }}
           {{- end }}
     {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
     {{- toYaml .Values.ingress.tls | nindent 4 }}
   {{- end }}
-{{- end }} 
+{{- end }}

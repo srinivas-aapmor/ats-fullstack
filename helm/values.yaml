@@ -13,7 +13,7 @@ backend:
     tag: latest
   replicaCount: 1
   service:
-      type: NodePort
+    type: NodePort
     port: 5000
   env:
     - name: S3_REGION
@@ -21,13 +21,13 @@ backend:
     - name: S3_BUCKET_NAME
       value: "cv-test-python-api"
     - name: AWS_ACCESS_KEY
-      valueFromSecret: ""
+      value: ""
     - name: AWS_SECRET_KEY
-      valueFromSecret: ""
+      value: ""
     - name: MONGO_URI
-      valueFromSecret: ""
+      value: ""
     - name: OPENAI_API_KEY
-      valueFromSecret: ""
+      value: ""
 
 
 
