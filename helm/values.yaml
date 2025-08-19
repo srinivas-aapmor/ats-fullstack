@@ -1,7 +1,7 @@
 frontend:
   image:
     repository: ghcr.io/srinivas-aapmor/ats-frontend
-    tag: latest
+    tag: v1
   replicaCount: 1
   service:
     type: NodePort
@@ -10,7 +10,7 @@ frontend:
 backend:
   image:
     repository: ghcr.io/srinivas-aapmor/ats-backend
-    tag: latest
+    tag: v1
   replicaCount: 1
   service:
     type: NodePort
